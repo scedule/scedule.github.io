@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta charset="utf-8">
+  <title>2048</title>
+
+  <link href="../../theme.css" rel="stylesheet" type="text/css">
+  <link href="style/main.css" rel="stylesheet" type="text/css">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="meta/apple-touch-icon.png">
+  <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x1096.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"> <!-- iPhone 5+ -->
+  <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x920.png"  media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)"> <!-- iPhone, retina -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
+  <style>
+    body {
+      background: var(--bg, #faf8ef) !important;
+      background-size: cover !important;
+      background-position: center !important;
+      background-attachment: fixed !important;
+    }
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 2000;
+      font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+    }
+    .modal-content {
+      background: #222;
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      border: 4px solid #776e65;
+      color: white;
+      min-width: 300px;
+    }
+    .modal-content h2 {
+      color: #f9f6f2;
+      margin-top: 0;
+      font-size: 2em;
+    }
+    .modal-content p {
+      color: #f9f6f2;
+      font-size: 1.2em;
+      margin: 15px 0;
+    }
+    .modal-btn {
+      background: #8f7a66;
+      color: #f9f6f2;
+      border: none;
+      padding: 12px 25px;
+      font-size: 1.2em;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: 5px;
+      margin-top: 20px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .modal-btn:hover {
+      background: #9f8b77;
+    }
+    .modal-btn.secondary {
+      background: transparent;
+      border: 2px solid #f9f6f2;
+      color: #f9f6f2;
+      margin-left: 10px;
+    }
+    .modal-btn.secondary:hover {
+      background: rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+  <script>
+    (function() {
+        var theme = localStorage.getItem('themeColor') || 'default';
+        var mode = localStorage.getItem('themeMode') || 'light';
+        var customBg = localStorage.getItem('customBg');
+        if (mode === 'dark') document.body.classList.add('dark');
+        if (theme !== 'default') document.body.classList.add('theme-' + theme);
+        if (theme === 'custom' && customBg) {
+            document.body.style.setProperty('--bg', 'url(' + customBg + ')');
+            var brightness = localStorage.getItem('customBgBrightness');
+            if (brightness === 'light') document.body.classList.add('light-img');
+        }
+    })();
+  </script>
+  <a href="../../beta/index.html" style="position: absolute; top: 10px; left: 10px; padding: 10px 15px; background: rgba(255,255,255,0.8); border-radius: 8px; text-decoration: none; color: #333; font-family: sans-serif; font-weight: bold; z-index: 1000; border: 2px solid #333;">← Back to Beta</a>
+  <div class="container">
+    <div class="heading">
+      <h1 class="title">2048</h1>
+      <div class="scores-container">
+        <div class="score-container">0</div>
+        <div class="best-container">0</div>
+      </div>
+    </div>
+
+    <div class="above-game">
+      <p class="game-intro">Join the numbers and get to the <strong>2048 tile!</strong></p>
+      <a class="restart-button">New Game</a>
+    </div>
+
+    <div class="game-container">
+      <div class="game-message">
+        <p></p>
+        <div class="lower">
+	        <a class="keep-playing-button">Keep going</a>
+          <a class="retry-button">Try again</a>
+        </div>
+      </div>
+
+      <div class="grid-container">
+        <div class="grid-row">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+      </div>
+
+      <div class="tile-container">
+
+      </div>
+    </div>
+
+    <p class="game-explanation">
+      <strong class="important">How to play:</strong> Use your <strong>arrow keys</strong> to move the tiles. When two tiles with the same number touch, they <strong>merge into one!</strong>
+    </p>
+    <hr>
+    <p>
+    <strong class="important">Note:</strong> This site is the official version of 2048. You can play it on your phone via <a href="http://git.io/2048">http://git.io/2048.</a> All other apps or sites are derivatives or fakes, and should be used with caution.
+    </p>
+    <hr>
+    <p>
+    Created by <a href="http://gabrielecirulli.com" target="_blank">Gabriele Cirulli.</a> Based on <a href="https://itunes.apple.com/us/app/1024!/id823499224" target="_blank">1024 by Veewo Studio</a> and conceptually similar to <a href="http://asherv.com/threes/" target="_blank">Threes by Asher Vollmer.</a>
+    </p>
+  </div>
+
+  <div id="game-over-modal" class="modal">
+		<div class="modal-content">
+			<h2 id="modal-title">Game Over!</h2>
+			<p>Score: <span id="modal-score">0</span></p>
+			<p>Daycoins Earned: <span id="modal-coins">0</span></p>
+      <button id="keep-playing-btn" class="modal-btn">Keep Playing</button>
+			<button id="restart-btn" class="modal-btn">Try Again</button>
+			<a href="../../beta/index.html" class="modal-btn secondary">Exit</a>
+		</div>
+	</div>
+
+  <script src="js/bind_polyfill.js"></script>
+  <script src="js/classlist_polyfill.js"></script>
+  <script src="js/animframe_polyfill.js"></script>
+  <script src="js/keyboard_input_manager.js"></script>
+  <script src="js/html_actuator.js"></script>
+  <script src="js/grid.js"></script>
+  <script src="js/tile.js"></script>
+  <script src="js/local_storage_manager.js"></script>
+  <script src="js/game_manager.js"></script>
+  <script>
+    // Wait till the browser is ready to render the game (avoids glitches)
+    window.requestAnimationFrame(function () {
+      var gameManager = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
+
+      // Override the actuate method to pass score to message
+      HTMLActuator.prototype.actuate = function (grid, metadata) {
+        var self = this;
+
+        window.requestAnimationFrame(function () {
+          self.clearContainer(self.tileContainer);
+
+          grid.cells.forEach(function (column) {
+            column.forEach(function (cell) {
+              if (cell) {
+                self.addTile(cell);
+              }
+            });
+          });
+
+          self.updateScore(metadata.score);
+          self.updateBestScore(metadata.bestScore);
+
+          if (metadata.terminated) {
+            if (metadata.over) {
+              self.message(false, metadata.score); // You lose
+            } else if (metadata.won) {
+              self.message(true, metadata.score); // You win!
+            }
+          }
+        });
+      };
+
+      // Override the message function to show our custom modal
+      HTMLActuator.prototype.message = function (won, score) {
+        var earned = Math.floor(score / 5);
+        var coins = localStorage.getItem('daycoins');
+        if (coins !== 'Infinity') {
+            coins = parseInt(coins) || 0;
+            localStorage.setItem('daycoins', coins + earned);
+        }
+
+        var modal = document.getElementById("game-over-modal");
+        document.getElementById("modal-title").innerText = won ? "You Win!" : "Game Over!";
+        document.getElementById("modal-score").innerText = score;
+        document.getElementById("modal-coins").innerText = earned;
+
+        document.getElementById('keep-playing-btn').style.display = won ? 'inline-block' : 'none';
+        document.getElementById('restart-btn').innerText = won ? 'New Game' : 'Try Again';
+
+        modal.style.visibility = "visible";
+        modal.style.opacity = "1";
+      };
+
+      // Handle restart/continue buttons
+      document.getElementById('restart-btn').addEventListener('click', function() {
+        document.getElementById("game-over-modal").style.visibility = "hidden";
+        document.getElementById("game-over-modal").style.opacity = "0";
+        gameManager.restart();
+      });
+      document.getElementById('keep-playing-btn').addEventListener('click', function() {
+        document.getElementById("game-over-modal").style.visibility = "hidden";
+        document.getElementById("game-over-modal").style.opacity = "0";
+        gameManager.keepPlaying();
+      });
+      document.querySelector('.restart-button').addEventListener('click', function() { gameManager.restart(); });
+    });
+  </script>
+</body>
+</html>

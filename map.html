@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5QHY2PMM4L"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5QHY2PMM4L');
+</script>
+    <title>Site Map</title>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background:none;
+            color: var(--text-main);
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            box-sizing: border-box;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Background Image Container */
+        #bg-container {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: var(--bg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center;
+            background-color: var(--base-bg, transparent);
+            z-index: -1000; /* Behind everything */
+            pointer-events: none;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        /* Requested CSS */
+        .landing-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; max-width: 800px; width: 100%; margin-top: 40px;
+        }
+        .landing-card {
+            border: 1px solid var(--border); border-radius: 16px; padding: 32px 24px;
+            text-align: center; cursor: pointer; transition: all 0.2s;
+            background: var(--card-bg);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s ease, border-color 0.3s ease;
+            text-decoration: none; /* Ensure links don't have underlines */
+        }
+        .landing-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); border-color: var(--primary); }
+        .landing-card .icon { font-size: 3rem; margin-bottom: 16px; display: block; }
+        .landing-card h3 { margin: 0 0 8px; color: var(--text-main); }
+        .landing-card p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Modal CSS */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; }
+        .modal-box {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.9); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-box h3 { margin-top: 0; color: var(--text-main); margin-bottom: 10px; }
+        .modal-box p { color: var(--text-muted); margin-bottom: 25px; margin-top: 0; }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; }
+        .btn {
+            padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;
+            font-weight: bold; transition: opacity 0.2s; font-size: 1rem;
+        }
+        .btn-cancel { background: var(--border); color: var(--text-main); }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <div id="bg-container"></div>
+    <h1>Site Map</h1>
+    <p style="color: var(--text-muted);">Where do you want to go?</p>
+    <div id="andrew-motd" style="color: var(--primary); font-weight: 600; margin-bottom: 10px;">Loading...</div>
+
+    <div class="landing-grid" id="aliases-container">
+        <!-- Cards injected via JS -->
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-box">
+            <h3>Are you sure?</h3>
+            <p>The admin panel is only for admins.</p>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-confirm" id="confirm-btn">Yes, proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Theme Support
+        function initTheme() {
+            const savedColor = localStorage.getItem('themeColor');
+            const savedMode = localStorage.getItem('themeMode');
+            const oldTheme = localStorage.getItem('theme');
+            const dualMode = localStorage.getItem('dualMode') === 'true';
+            const themeColorLeft = localStorage.getItem('themeColorLeft') || 'default';
+            const themeColorRight = localStorage.getItem('themeColorRight') || 'default';
+
+            let color = 'default';
+            let mode = 'light';
+
+            if (savedColor && savedMode) {
+                color = savedColor;
+                mode = savedMode;
+            } else if (oldTheme) {
+                if (oldTheme === 'dark') mode = 'dark';
+                else if (oldTheme.startsWith('theme-')) {
+                    color = oldTheme.replace('theme-', '');
+                    mode = (color === 'mtc') ? 'dark' : 'light';
+                }
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                mode = 'dark';
+            }
+
+            document.body.classList.remove('dark', 'theme-mtc', 'theme-red', 'theme-green', 'theme-purple', 'theme-orange', 'theme-rainbow', 'theme-aurora', 'theme-midnight', 'theme-fire', 'theme-matrix', 'theme-glass', 'theme-sand', 'theme-gold', 'theme-galaxy', 'theme-custom', 'theme-ocean', 'theme-sunset', 'theme-neon', 'theme-forest', 'theme-desert', 'theme-polar', 'theme-cyber', 'theme-coffee', 'theme-sky', 'theme-lavender', 'theme-steel', 'theme-bubblegum', 'theme-void');
+            document.body.classList.remove('dual-theme');
+            document.body.style.removeProperty('--bg');
+            
+            if (window.partyInterval) {
+                clearInterval(window.partyInterval);
+                document.body.style.removeProperty('--primary');
+                document.body.style.removeProperty('--primary-hover');
+            }
+            
+            if (window.partyAudio) {
+                window.partyAudio.pause();
+                window.partyAudio = null;
+                sessionStorage.removeItem('partyAudioTime');
+            }
+            
+            const styleTag = document.getElementById('dual-theme-style');
+            if (styleTag) styleTag.remove();
+
+            if (dualMode) {
+                document.body.classList.add('dual-theme');
+                if (mode === 'dark') document.body.classList.add('dark');
+
+                const getThemeVars = (theme) => {
+                    const dummy = document.createElement('div');
+                    dummy.className = `theme-${theme}`;
+                    if (mode === 'dark') dummy.classList.add('dark');
+                    if (theme === 'custom' && localStorage.getItem('customBgBrightness') === 'light') dummy.classList.add('light-img');
+                    dummy.style.visibility = 'hidden';
+                    document.documentElement.appendChild(dummy);
+                    const style = getComputedStyle(dummy);
+                    let bg = style.getPropertyValue('--bg').trim();
+                    if (theme === 'custom') bg = `url(${localStorage.getItem('customBg')})`;
+                    const vars = {
+                        bg: bg,
+                        cardBg: style.getPropertyValue('--card-bg').trim() || (mode==='dark'?'#1e293b':'#ffffff'),
+                        textMain: style.getPropertyValue('--text-main').trim() || (mode==='dark'?'#f8fafc':'#333'),
+                        border: style.getPropertyValue('--border').trim() || '#ccc'
+                    };
+                    document.documentElement.removeChild(dummy);
+                    return vars;
+                };
+
+                const leftVars = getThemeVars(themeColorLeft);
+                const rightVars = getThemeVars(themeColorRight);
+                const css = `
+                    :root {
+                        --bg-left: ${leftVars.bg}; --bg-right: ${rightVars.bg};
+                        --card-bg-left: ${leftVars.cardBg}; --card-bg-right: ${rightVars.cardBg};
+                        --text-main-left: ${leftVars.textMain}; --text-main-right: ${rightVars.textMain};
+                        --border-left: ${leftVars.border};
+                    }
+                `;
+                const style = document.createElement('style');
+                style.id = 'dual-theme-style';
+                style.innerHTML = css;
+                document.head.appendChild(style);
+            } else {
+                if (mode === 'dark') document.body.classList.add('dark');
+                if (color !== 'default') document.body.classList.add(`theme-${color}`);
+                if (color === 'party') {
+                    const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#8b00ff', '#ff00ff'];
+                    if (typeof window.partyIndex === 'undefined') window.partyIndex = 0;
+                    const update = () => {
+                        const c = colors[window.partyIndex];
+                        document.body.style.setProperty('--bg', `linear-gradient(${c}, ${c})`);
+                        document.body.style.setProperty('--primary', c);
+                        document.body.style.setProperty('--primary-hover', c);
+                        window.partyIndex = (window.partyIndex + 1) % colors.length;
+                    };
+                    update();
+                    window.partyInterval = setInterval(update, 1120);
+                    
+                    if (!window.partyAudio) {
+                        window.partyAudio = new Audio('/assets/lucid.aac');
+                        window.partyAudio.loop = true;
+                        const savedTime = parseFloat(sessionStorage.getItem('partyAudioTime'));
+                        if (!isNaN(savedTime)) window.partyAudio.currentTime = savedTime;
+                        window.partyAudio.play().catch(e => console.log(e));
+                    }
+                }
+                if (color === 'custom') {
+                    const bg = localStorage.getItem('customBg');
+                    if (bg) document.body.style.setProperty('--bg', `url(${bg})`);
+                    const brightness = localStorage.getItem('customBgBrightness');
+                    if (brightness === 'light') document.body.classList.add('light-img');
+                }
+            }
+        }
+        initTheme();
+
+        // 2. Configuration: Add new aliases here
+        let aliases = [
+            { title: "Beta", desc: "Community features", icon: "🧪", url: "beta/index.html" },
+            { title: "survey", desc: "Survey", icon: "📋", url: "survey.html" },
+            { title: "Admin", desc: "Admin Panel <br> <small>(Only for admins)</small>", icon: "🔒", url: "admin/index.html", confirm: true, message: "The admin panel is only for admins."},
+            { title: "Source Code", desc: "View on GitHub", icon: "💻", url: "https://github.com/scedule/scedule.github.io", confirm: true, top: true, message: "Warning: If you go to GitHub, it will be saved to your history." },
+        ];
+
+        if (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1 || window.Capacitor !== undefined || (navigator.userAgent.includes('Android') && navigator.userAgent.includes('wv'))) {
+            aliases = aliases.filter(a => a.title !== "Source Code");
+        }
+
+        // Modal Logic
+        let targetUrl = '';
+        let targetTop = false;
+        const modal = document.getElementById('confirm-modal');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const modalMsg = document.querySelector('#confirm-modal p');
+
+        function openModal(url, top = false, message) {
+            targetUrl = url;
+            targetTop = top;
+            if (message) modalMsg.innerText = message;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        confirmBtn.onclick = () => {
+            if (targetTop) window.top.location.href = targetUrl;
+            else window.location.href = targetUrl;
+        };
+
+        // 3. Render Logic
+        const container = document.getElementById('aliases-container');
+        
+        aliases.forEach(item => {
+            const card = document.createElement('a');
+            card.className = 'landing-card';
+            card.href = item.url;
+            if (item.confirm) {
+                card.onclick = (e) => {
+                    e.preventDefault();
+                    openModal(item.url, item.top, item.message);
+                };
+            }
+            card.innerHTML = `
+                <span class="icon">${item.icon}</span>
+                <h3>${item.title}</h3>
+                <p>${item.desc}</p>
+            `;
+            container.appendChild(card);
+        });
+
+        // Andrew MOTD Fetcher
+        async function loadAndrewMotd() {
+            const el = document.getElementById('andrew-motd');
+            try {
+                const res = await fetch("https://script.google.com/macros/s/AKfycbxmW2r7TkHCaGMO2z6ZnJdDtVnRGrhg68bN5UQlUA629asnV4kz54o2MGxOdRvzspwG/exec?type=get_motd&t=" + Date.now());
+                const data = await res.json();
+                el.innerText = `Alice Said Today: "${data.motd || ''}"`;
+            } catch (e) {
+                el.innerText = "Failed to load message.";
+            }
+        }
+        loadAndrewMotd();
+
+        window.addEventListener('beforeunload', () => {
+            if (window.partyAudio && !window.partyAudio.paused) {
+                sessionStorage.setItem('partyAudioTime', window.partyAudio.currentTime);
+            }
+        });
+    </script>
+</body>
+</html>

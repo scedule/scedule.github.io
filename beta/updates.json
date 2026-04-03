@@ -1,0 +1,164 @@
+[
+  {
+    "version": "Version 4.0",
+    "date": "current",
+    "changes": [
+      "a completly overhauled shop with Depoule the bargainer"
+    ]
+  },
+  {
+    "version": "Version 3.2",
+    "date": "2/23-4/2",
+    "changes": [
+      "Removed the normal schedule view",
+      "added bios and profile pictures",
+      "Added minigames",
+      "Added desktop and mobile apps"
+    ]
+  },
+  {
+    "version": "Version 3.1",
+    "date": "2/22-2/23",
+    "changes": [
+      "made the whole website more secure to prevent cheating and bot accounts (verifies legitimancy of account data and added bot protection)",
+      "added taking notes in the website",
+      "added new stats and leaderboards"
+    ]
+  },
+  {
+    "version": "Version 3.0",
+    "date": "2/15-2/22",
+    "changes": [
+      "Added a public leaderboard that you can opt out of which allows you to see others streaks and daycoins. (encourages community effort)"
+    ]
+  },
+  {
+    "version": "Version 2.91",
+    "date": "2/12-2/15",
+    "changes": [
+      "overhauled css and js code"
+    ]
+  },
+  {
+    "version": "Version 2.9",
+    "date": "2/11-2/12",
+    "changes": [
+      "Added morning and evening streaks (if you get all of the streaks to 30 days you get 100,000 daycoins)"
+    ]
+  },
+  {
+    "version": "Version 2.8",
+    "date": "2/10-2/11",
+    "changes": [
+      "added a school lunch view in the calendar (i changed the monthly view's name to calendar)"
+    ]
+  },
+  {
+    "version": "Version 2.7",
+    "date": "2/10-2/10",
+    "changes": [
+      "added themes that you can only get by extending your streak"
+    ]
+  },
+  {
+    "version": "Version 2.6",
+    "date": "2-8-2/10",
+    "changes": [
+      "added a option in settings for a AI chatbot in the traditional Scedule that the user can talk to. (I wanted to try AI integration.)"
+    ]
+  },
+  {
+    "version": "Version 2.5",
+    "date": "2/8-2/8",
+    "changes": [
+      "allowed users to add custom events to the monthly calendar"
+    ]
+  },
+  {
+    "version": "Version 2.4",
+    "date": "2/7-2/8",
+    "changes": [
+      "added a new split theme feature in settings which allows you to use 2 themes at once (remember this feature is in beta and it pretty buggy)"
+    ]
+  },
+  {
+    "version": "Version 2.3",
+    "date": "2/7-2/7",
+    "changes": [
+      "added a new shop to make it easier to get themes"
+    ]
+  },
+  {
+    "version": "Version 2.2",
+    "date": "2-6-2/7",
+    "changes": [
+      "added a view for the monthly calendar"
+    ]
+  },
+  {
+    "version": "Version 2.1",
+    "date": "2/6-2/6",
+    "changes": [
+      "added a new way for users to be able to sych data across devices"
+    ]
+  },
+  {
+    "version": "Version 2.0",
+    "date": "2/1-2/5",
+    "changes": [
+      "added a new landing page",
+      "added a new site map",
+      "added a new changelog",
+      "added a new community MOTD",
+      "added a new streak feature",
+      "added a new bid feature",
+      "fixed a lot of miscelanous bugs",
+      "redesigned the wheel",
+      "added exclusive themes that cost many daycoins",
+      "added a feature that lets admins and people exchange daycoins",
+      "gave andrew his own motd in the site map lol"
+    ]
+  },
+  {
+    "version": "Version 1.5",
+    "date": "1/5-2/1",
+    "changes": [
+      "added daycoins",
+      "added a theme menu in settings",
+      "Made there custom backgrounds",
+      "added a daily wheel",
+      "added andrews own motd",
+      "Made a new site map"
+    ]
+  },
+  {
+    "version": "Version 1.4",
+    "date": "1/5-1/8",
+    "changes": [
+      "To ensure privacy made the site appear hidden on first login",
+      "added configuration into a new settings menu.",
+      "added a feature to skip the masking of the site. (Available in the settings menu of SceduleBeta"
+    ]
+  },
+  {
+    "version": "Version 1.3",
+    "date": "12/24-1/5",
+    "changes": [
+      "added a all new dark theme.",
+      "Better integration between the beta and normal version of the site."
+    ]
+  },
+  {
+    "version": "Version 1.2",
+    "date": "12/20-12/24",
+    "changes": [
+      "added a admin panel for more easy backend access for features such as changing the MOTD.",
+      "added community rating",
+      "added a community offset feature",
+      "Fixed a lot of miscelanous bugs",
+      "Overhauled a lot of features and moved them to the backend",
+      "added storage across sessions and users using a automated google drive folder. Yes, if someone sends me too many emails the whole server will break.",
+      "For easy of use moved community features to Schedule<span style=\"color: rgb(4, 0, 255)\">Beta</span>"
+    ]
+  }
+]

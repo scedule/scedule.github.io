@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5QHY2PMM4L"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5QHY2PMM4L');
+</script>
+    <title>Schedule Beta</title>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="../theme.css">
+    <style>
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        
+        body { 
+            margin: 0; 
+            background:none;
+            color: var(--text-main); 
+            color: var(--text-main); 
+            height: 100vh;
+            height: 100dvh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            transition: color 0.3s ease;
+            
+        }
+
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Background Image Container */
+        #bg-container {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center;
+            z-index: -1000; /* Behind everything */
+            pointer-events: none;
+        }
+        
+        /* --- Header --- */
+        header {
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .logo-area h1 { margin: 0; font-size: clamp(0.9rem, 4vw, 1.1rem); font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; }
+        .logo-area span { color: var(--primary); }
+        .logo-area p { margin: 2px 0 0; font-size: 0.75rem; color: var(--text-muted); }
+
+        select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            outline: none;
+        }
+        select:hover { border-color: #cbd5e1; }
+        select:focus { border-color: var(--primary); ring: 2px solid var(--primary); }
+
+        /* --- Main Layout --- */
+        main {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--surface);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            overflow-y: auto;
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .time-gutter {
+            width: clamp(60px, 15vw, 80px);
+            background: var(--gutter-bg);
+            border-right: 1px solid var(--border);
+            flex-shrink: 0;
+            user-select: none;
+            z-index: 20;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .hour-mark {
+            height: 80px; 
+            display: flex;
+            justify-content: center;
+            padding-top: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px dashed var(--border);
+            position: relative;
+        }
+        
+        /* Subtle half-hour marks */
+        .hour-mark::after {
+            content: '';
+            position: absolute;
+            bottom: 40px;
+            right: 0;
+            width: 6px;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .grid {
+            flex-grow: 1;
+            position: relative;
+            background-image: linear-gradient(var(--border) 1px, transparent 1px);
+            background-size: 100% 40px; /* 30 min lines */
+            min-width: 0;
+        }
+
+        /* --- Live Indicator --- */
+        .time-now {
+            position: absolute;
+            left: 0; right: 0;
+            height: 2px;
+            background: #ef4444;
+            z-index: 50;
+            pointer-events: none;
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
+            transition: top 0.5s ease;
+        }
+        .time-now::before {
+            content: '';
+            position: absolute;
+            left: -5px; top: -4px;
+            width: 10px; height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.8);
+        }
+        
+        .time-badge {
+            position: absolute;
+            left: -55px; /* Pull into gutter */
+            top: -10px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            width: 45px;
+            text-align: center;
+        }
+
+        /* --- Schedule Blocks --- */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .block {
+            position: absolute;
+            left: 6px; right: 12px;
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, filter 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 10;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        .block:hover {
+            transform: scale(1.015) translateY(-2px);
+            z-index: 20;
+            box-shadow: 0 12px 20px -5px rgba(0,0,0,0.15), 0 4px 6px -2px rgba(0,0,0,0.05);
+            filter: brightness(1.05);
+        }
+
+        .block-title { 
+            font-weight: 700; 
+            font-size: clamp(0.75rem, 2.5vw, 0.9rem); 
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .block-meta { 
+            font-size: 0.7rem; 
+            opacity: 0.9; 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .dots-btn {
+            position: absolute;
+            top: 4px; right: 6px;
+            opacity: 0;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .block:hover .dots-btn { opacity: 0.8; }
+
+        /* --- Menus & Modals --- */
+        .ctx-menu {
+            position: fixed;
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 180px;
+            padding: 6px;
+            animation: slideUp 0.2s ease-out;
+        }
+        .ctx-item {
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.1s;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ctx-item:hover { background: var(--hover-bg); color: var(--primary); }
+        .ctx-item.danger:hover { background: #fef2f2; color: #ef4444; }
+
+        .overlay {
+            position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .overlay.active { opacity: 1; }
+        
+        .modal {
+            background: var(--card-bg); width: 100%; max-width: 420px; padding: 32px;
+            border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 85vh; overflow-y: auto;
+        }
+        .overlay.active .modal { transform: scale(1); }
+        
+        .modal h2 { margin: 0 0 8px; font-size: 1.25rem; color: var(--text-main); }
+        .modal p { margin: 0 0 24px; font-size: 0.85rem; color: var(--text-muted); }
+        
+        label { display: block; margin-bottom: 8px; font-size: 0.8rem; font-weight: 600; color: var(--text-main); }
+        
+        input, textarea {
+            width: 100%; padding: 12px; border: 1px solid var(--border);
+            border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem;
+            background: var(--input-bg);
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+        input:focus, textarea:focus { 
+            background: var(--card-bg); 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+            outline: none; 
+        }
+
+        .modal-btns { display: flex; justify-content: flex-end; gap: 12px; }
+        
+        .btn { 
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; border: none; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; 
+        }
+        .btn-ghost { background: transparent; color: var(--text-muted); }
+        .btn-ghost:hover { background: var(--hover-bg); color: var(--text-main); }
+        
+        .btn-primary { background: var(--primary); color: var(--btn-text); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .empty-state {
+            position: absolute; inset: 0; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-muted);
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Batch Bar */
+        .batch-bar {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(150%);
+            background: var(--text-main); color: white; padding: 8px 8px 8px 20px;
+            border-radius: 50px; display: flex; align-items: center; gap: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            z-index: 500; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .batch-bar.active { transform: translateX(-50%) translateY(0); }
+        .batch-bar span { font-weight: 600; font-size: 0.9rem; }
+        .batch-bar button { padding: 8px 20px; border-radius: 40px; background: var(--card-bg); color: var(--text-main); border: none; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
+        .batch-bar button:hover { transform: scale(1.05); }
+        .batch-bar button:active { transform: scale(0.95); }
+
+        /* Pending States */
+        .block.pending-modify { 
+            box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary);
+            z-index: 30;
+        }
+        .block.pending-delete { 
+            opacity: 0.5; filter: grayscale(1); 
+        }
+        .block.pending-delete .block-title { text-decoration: line-through; }
+        .block.pending-add {
+            border: 2px dashed var(--primary);
+            opacity: 0.9;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Difficulty Buttons */
+        .btn-diff {
+            flex: 1; padding: 10px 4px; border: 3px solid transparent; border-radius: 8px;
+            color: white; font-weight: 700; font-size: 0.75rem; cursor: pointer; text-align: center;
+            opacity: 0.4; transition: all 0.2s; text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .btn-diff:hover { opacity: 0.7; transform: translateY(-1px); }
+        .btn-diff.selected { opacity: 1; border-color: rgba(0,0,0,0.15); transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+        /* Rating Box (from index.html style) */
+        .rating-box {
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            padding: 15px; background: var(--input-bg); border-radius: 15px;
+            border: 1px solid var(--border); margin-bottom: 20px;
+        }
+        .rating-box label { margin: 0; font-weight: 600; color: var(--text-main); }
+        .rating-box input { width: 80px; padding: 5px; border-radius: 5px; border: 1px solid var(--border); text-align: center; margin: 0; background: var(--card-bg); }
+
+        /* Landing Screen */
+        .landing-overlay {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            background-color: var(--base-bg, #000);
+            background-attachment: fixed;
+            background-size: cover;
+            background-repeat: no-repeat;
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 3000;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 40px 20px; transition: opacity 0.3s;
+            overflow-y: auto;
+        }
+        .landing-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; max-width: 1000px; width: 100%; margin-top: 40px;
+        }
+        .landing-card {
+            border: 1px solid var(--border); border-radius: 16px; padding: 32px 24px;
+            text-align: center; cursor: pointer; transition: all 0.2s;
+            background: var(--card-bg);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s ease, border-color 0.3s ease;
+        }
+        .landing-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); border-color: var(--primary); }
+        .landing-card .icon { font-size: 3rem; margin-bottom: 16px; display: block; }
+        .landing-card h3 { margin: 0 0 8px; color: var(--text-main); }
+        .landing-card p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Voting View */
+        .vote-view {
+            position: absolute; inset: 0; top: 61px; /* Below header */
+            background: var(--bg); z-index: 200; overflow-y: auto;
+            background: var(--surface);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 200; overflow-y: auto;
+            padding: 20px; display: none;
+        }
+        .vote-card {
+            background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 16px;
+            border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            max-width: 600px; margin-left: auto; margin-right: auto;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .vote-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .vote-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--border); color: var(--text-muted); text-transform: uppercase; }
+        .vote-actions { display: flex; gap: 10px; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+        .vote-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-main); cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+        .vote-btn:hover { background: var(--hover-bg); }
+
+        .theme-toggle {
+            width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+            background: var(--card-bg); color: var(--text-main);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.1rem; margin-right: 12px;
+        }
+        .theme-toggle:hover { transform: rotate(15deg) scale(1.1); background: var(--hover-bg); }
+        .theme-toggle:active { transform: scale(0.9); }
+
+        .theme-btn {
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-main);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .theme-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .theme-btn.active { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        .mode-btn {
+            flex: 1; border: none; background: transparent; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.2s;
+        }
+        .mode-btn:hover { background: rgba(0,0,0,0.05); color: var(--text-main); }
+        .mode-btn.active { background: var(--card-bg); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        .lock-icon { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .coin-balance { background: #f59e0b; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; }
+        .price-tag { font-size: 0.7rem; display: block; opacity: 0.8; margin-top: 2px; }
+
+        #settingsModal {
+            z-index: 3100;
+        }
+        #shopModal { z-index: 3100; }
+        #wheel-modal { z-index: 3200; }
+        #genericModal { z-index: 3300; }
+        #themeModal { z-index: 3150; }
+        #bidModal { z-index: 3160; }
+        #streakModal { z-index: 3250; }
+        #accountModal { z-index: 3150; }
+        #leaderboardModal { z-index: 3150; }
+        #minigamesModal { z-index: 3150; }
+        #friendsModal { z-index: 3150; }
+        #notesModal { z-index: 3150; }
+        
+        /* Preview Container Styles */
+        #previewContainer {
+            background-image: var(--bg);
+            background-color: var(--base-bg, #000);
+            background-size: cover;
+            background-position: center;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+
+        /* Shop Styles */
+        .shop-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;
+        }
+        .shop-card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+            padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+        .shop-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-color: var(--primary); }
+        .shop-card .preview {
+            width: 60px; height: 60px; border-radius: 50%; margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            background: var(--bg) !important; background-size: cover !important; background-position: center !important;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .theme-preview-box {
+            width: 100%; max-width: 320px; height: 180px; border-radius: 16px;
+            margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            position: relative; overflow: hidden; border: 1px solid var(--border);
+            background: var(--bg) !important; background-size: cover !important; background-position: center !important;
+        }
+        .cart-badge {
+            position: absolute; top: 8px; right: 8px; background: var(--primary); color: white;
+            border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex;
+            align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Shop Toggle Slider */
+        .shop-toggle {
+            display: flex;
+            background: var(--input-bg);
+            border-radius: 12px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            position: relative;
+            isolation: isolate;
+        }
+        .shop-tab {
+            flex: 1; padding: 10px; text-align: center; cursor: pointer;
+            font-weight: 600; color: var(--text-muted); z-index: 2; transition: color 0.3s;
+        }
+        .shop-tab.active { color: var(--primary); }
+        .shop-slider {
+            position: absolute; top: 4px; bottom: 4px; left: 4px;
+            width: calc(50% - 4px); background: var(--card-bg); border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            z-index: 1;
+        }
+
+        /* Wheel Tabs */
+        .wheel-tabs { display: flex; gap: 8px; margin-bottom: 20px; width: 100%; }
+        .wheel-tab { 
+            flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); 
+            background: var(--card-bg); cursor: pointer; text-align: center; transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .wheel-tab:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .wheel-tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .wheel-tab.active .count { background: rgba(255,255,255,0.2); }
+        .wheel-tab .count { font-size: 0.7rem; background: var(--input-bg); padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+        .wheel-tab.active span { color: white !important; }
+
+        /* Tutorial Styles */
+        .tutorial-icon { font-size: 5rem; margin-bottom: 24px; display: block; animation: float 3s ease-in-out infinite; }
+        .tutorial-step h2 { font-size: 2.5rem; margin-bottom: 16px; font-weight: 800; letter-spacing: -0.03em; }
+        .tutorial-step p { font-size: 1.2rem; line-height: 1.6; color: var(--text-muted); max-width: 600px; margin: 0 auto 32px; }
+
+        /* Rich Text Editor */
+        .editor-toolbar {
+            display: flex; gap: 5px; margin-bottom: 0;
+            background: var(--input-bg); padding: 8px; border: 1px solid var(--border);
+            border-radius: 8px 8px 0 0; border-bottom: none; flex-wrap: wrap;
+        }
+        .btn-tool {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 4px; cursor: pointer; padding: 6px 12px;
+            color: var(--text-main); font-size: 0.9rem; min-width: 32px;
+        }
+        .btn-tool:hover { background: var(--hover-bg); }
+        .rich-editor {
+            width: 100%; height: 250px; padding: 12px; border: 1px solid var(--border);
+            border-radius: 0 0 8px 8px; margin-bottom: 20px; font-size: 0.95rem;
+            background: var(--input-bg); color: var(--text-main);
+            overflow-y: auto; line-height: 1.5;
+        }
+        .rich-editor:focus { outline: none; border-color: var(--primary); }
+        .rich-editor img { width: 100%; height: auto; max-height: 400px; object-fit: contain; border-radius: 4px; margin: 5px 0; display: block; }
+        .rich-editor ul, .rich-editor ol { padding-left: 20px; margin: 5px 0; }
+        .rich-editor a { color: var(--primary); text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div id="bg-container"></div>
+<header>
+    <div class="logo-area">
+        <h1><a href="#" onclick="location.reload()" style="text-decoration: none; color:var(--text-main)">Schedule</a><span style="color: var(--primary)">Beta</span></h1>
+        <p>Where community and a wacky scedule app combine.</p>
+    </div>
+    <div id="headerControls" style="display:flex; align-items:center;">
+        <select id="daySelect">
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+        </select>
+        <button id="addBtn" class="btn btn-primary" style="margin-left: 12px; padding: 8px 16px;" onclick="openProposal('add')">+ Add</button>
+    </div>
+</header>
+
+<main id="scrollArea">
+    <div class="time-gutter" id="gutter"></div>
+    <div class="grid" id="grid">
+        <div id="timeLine" class="time-now">
+            <div class="time-badge" id="timeBadge">--:--</div>
+        </div>
+        <div id="empty" class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px; opacity:0.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <p>No events scheduled for this day.</p>
+        </div>
+    </div>
+</main>
+
+<!-- Voting View -->
+<div id="voteView" class="vote-view">
+    <div style="max-width: 600px; margin: 0 auto 20px;">
+        <h2 style="margin-bottom: 4px;">Community Votes</h2>
+        <p style="color: var(--text-muted); margin-top:0;">Vote on proposals to shape the schedule.</p>
+    </div>
+    <div id="voteList">
+        <div class="spinner" style="margin: 40px auto;"></div>
+    </div>
+</div>
+
+<!-- Rating View -->
+<div id="ratingView" class="vote-view">
+    <div style="max-width: 600px; margin: 0 auto 20px;">
+        <h2 style="margin-bottom: 4px;">Rate Classes</h2>
+        <p style="color: var(--text-muted); margin-top:0;">Share your opinion on different subjects.</p>
+    </div>
+    <div id="ratingList"></div>
+</div>
+
+<!-- Community Ratings View -->
+<div id="communityRatingsView" class="vote-view">
+    <div style="max-width: 600px; margin: 0 auto 20px;">
+        <h2 style="margin-bottom: 4px;">Community Insights</h2>
+        <p style="color: var(--text-muted); margin-top:0;">See what others think about classes.</p>
+    </div>
+    <div id="communityRatingsList"></div>
+</div>
+
+<!-- Changelog View -->
+<div id="changelogView" class="vote-view">
+    <div style="max-width: 600px; margin: 0 auto 20px;">
+        <h2 style="margin-bottom: 4px;">Update Log</h2>
+        <p style="color: var(--text-muted); margin-top:0;">Recent updates to the website.</p>
+    </div>
+    <div id="changelogList"></div>
+</div>
+
+<!-- Landing Screen -->
+<div id="landing" class="landing-overlay">
+    <button class="account-btn" onclick="openAccountModal()" title="Cloud Account" style="position: fixed; top: 24px; right: 24px; padding: 10px 24px; border-radius: 50px; border: 1px solid var(--border); background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: var(--text-main); font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); transition: all 0.2s ease; z-index: 3010;" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 12px 28px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.15)'">Account <span style="font-size: 1.4rem;">👤</span></button>
+    <h1 style="font-size: 2rem; margin-bottom: 8px;">Schedule<span style="color: rgb(4, 0, 255)">Beta</span></h1>
+    <p style="color: var(--text-muted);">Do your AR.</p>
+    <p style="color: var(--Hard); font-size: 0.75rem; font-weight: 700; margin-top: 4px;">This site is for home use only. Do not use at school or with school devices.</p>
+    <div class="landing-grid">
+        <div class="landing-card" onclick="setMode('editor')">
+            <span class="icon">✏️</span>
+            <h3>Propose Changes</h3>
+            <p>Suggest edits, renames, or time shifts.</p>
+        </div>
+        <div class="landing-card" onclick="openNotes()">
+            <span class="icon">📝</span>
+            <h3>Manage Notes</h3>
+            <p>Add personal notes to classes.</p>
+        </div>
+        <div class="landing-card" onclick="setMode('voting')">
+            <span class="icon">🗳️</span>
+            <h3>View Votes</h3>
+            <p>Vote on active community proposals.</p>
+        </div>
+        <div class="landing-card" onclick="setMode('rating')">
+            <span class="icon">⭐</span>
+            <h3>Rate Classes</h3>
+            <p>Update class difficulty ratings.</p>
+        </div>
+        <div class="landing-card" onclick="setMode('community_ratings')">
+            <span class="icon">📊</span>
+            <h3>Insights</h3>
+            <p>View community ratings & opinions.</p>
+        </div>
+        <div class="landing-card" onclick="setMode('changelog')">
+            <span class="icon">📜</span>
+            <h3>Update Log</h3>
+            <p>See what's new in the app.</p>
+        </div>
+        <div class="landing-card" onclick="window.location.href='../shop/index.html'">
+            <span class="icon">🛒</span>
+            <h3>Shop</h3>
+            <p>Buy themes & wheel effects.</p>
+        </div>
+        <div class="landing-card" onclick="openSettings()">
+            <span class="icon">⚙️</span>
+            <h3>Settings</h3>
+            <p>Customize your experience.</p>
+        </div>
+        <div class="landing-card" onclick="openWheel()">
+            <span class="icon">🎡</span>
+            <h3>Daily Spin</h3>
+            <p>Win Daycoins</p>
+        </div>
+        <div class="landing-card" onclick="openBidModal()">
+            <span class="icon">📢</span>
+            <h3>Community MOTD</h3>
+            <p>Bid Daycoins to set the message.</p>
+        </div>
+        <div class="landing-card" onclick="openStreak()">
+            <span class="icon">🔥</span>
+            <h3>Streak</h3>
+            <p>View daily rewards.</p>
+        </div>
+        <div class="landing-card" onclick="openLeaderboard()">
+            <span class="icon">🏆</span>
+            <h3>Leaderboard</h3>
+            <p>Top players.</p>
+        </div>
+        <div class="landing-card" onclick="openMinigames()">
+            <span class="icon">🎮</span>
+            <h3>Minigames</h3>
+            <p>Play games to earn coins.</p>
+        </div>
+        <div id="downloadAppCard" class="landing-card" onclick="window.location.href = 'download.html'">
+            <span class="icon">⬇️</span>
+            <h3>Download App</h3>
+            <p>Get the desktop app.</p>
+        </div>
+        <div class="landing-card" onclick="window.location.href = '../map.html'">
+            <span class="icon">🔁</span>
+            <h3>Site Map</h3>
+            <p>Easy viewing of different site pages.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Tutorial Overlay -->
+<div id="tutorial-overlay" class="overlay" style="z-index: 5000;">
+    <div class="modal" style="max-width: 100%; width: 100%; height: 100%; max-height: 100%; border-radius: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <div id="tutorial-content" style="max-width: 600px; width: 100%;"></div>
+        <div class="modal-btns" style="justify-content: center; margin-top: 24px;">
+            <button class="btn btn-ghost" onclick="endTutorial()">Skip</button>
+            <button class="btn btn-primary" id="tutorial-next-btn" onclick="nextTutorialStep()">Next</button>
+        </div>
+    </div>
+</div>
+
+<div id="ctx" class="ctx-menu">
+    <div class="ctx-item" onclick="openProposal('rename')"><span>✏️</span> Propose Rename</div>
+    <div class="ctx-item" onclick="openProposal('shift')"><span>🕒</span> Shift Time</div>
+    <div class="ctx-item" onclick="openNotes()"><span>📝</span> Edit Notes</div>
+    <div class="ctx-item danger" onclick="openProposal('delete')"><span>🗑️</span> Request Deletion</div>
+    <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+    <div class="ctx-item" onclick="cycleTheme()"><span>🎨</span> Cycle Theme</div>
+</div>
+
+<div id="batchBar" class="batch-bar">
+    <span id="batchCount">0 changes pending</span>
+    <button onclick="submitBatch()">Submit Request</button>
+</div>
+
+<div id="modal" class="overlay">
+    <div class="modal">
+        <h2 id="modalTitle">Propose Change</h2>
+        <p>Changes will be submitted for community voting.</p>
+        
+        <label>Subject Name</label>
+        <input type="text" id="pName">
+
+        <div id="extraFields" style="display:none;">
+            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <div style="flex:1"><label>Start Time</label><input type="time" id="pStart"></div>
+                <div style="flex:1"><label>End Time</label><input type="time" id="pEnd"></div>
+            </div>
+            <div id="diffField">
+                <label>Difficulty</label>
+                <div style="display:flex; gap:8px; margin-bottom:20px;">
+                    <div class="btn-diff bg-Easy" onclick="setDiff('Easy')">Easy</div>
+                    <div class="btn-diff bg-Average" onclick="setDiff('Average')">Avg</div>
+                    <div class="btn-diff bg-Hard" onclick="setDiff('Hard')">Hard</div>
+                    <div class="btn-diff bg-Extremely-Hard" onclick="setDiff('Extremely-Hard')">Extreme</div>
+                </div>
+                <div class="rating-box">
+                    <label>Rating:</label>
+                    <input type="text" id="pRating" placeholder="X/10">
+                </div>
+                <select id="pDiff" style="display:none">
+                    <option value="Easy">Easy</option>
+                    <option value="Average">Average</option>
+                    <option value="Hard">Hard</option>
+                    <option value="Extremely-Hard">Extremely Hard</option>
+                </select>
+            </div>
+        </div>
+        
+        <label>Reasoning / Proof</label>
+        <textarea id="pReason" placeholder="e.g. 'Teacher announced a schedule change in class today...'"></textarea>
+        
+        <div class="modal-btns">
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="pSubmit" disabled onclick="queueChange()">Add to Queue</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notes Modal -->
+<div id="notesModal" class="overlay">
+    <div class="modal" style="max-width: 800px; height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; background: var(--card-bg); flex-shrink: 0;">
+            <button id="notesBackBtn" class="btn btn-ghost" style="padding: 8px; display: none;" onclick="showNotesList()">← Back</button>
+            <h2 style="margin:0; flex:1; font-size: 1.5rem;">Notes 📝</h2>
+            <button class="btn btn-ghost" onclick="closeNotes()">✕</button>
+        </div>
+
+        <div id="notesContent" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+            <!-- List View -->
+            <div id="notesListView" style="width: 100%; height: 100%; padding: 20px; overflow-y: auto;">
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 20px;" onclick="createNewNote()">+ New Note</button>
+                <div id="notesList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+
+            <!-- Editor View -->
+            <div id="notesEditorView" style="width: 100%; height: 100%; display: none; flex-direction: column; padding: 20px; overflow-y: auto;">
+                <input type="text" id="noteTitleInput" placeholder="Note Title" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text-main);">
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                    <label style="margin:0; white-space: nowrap;">Link to Class:</label>
+                    <select id="noteLinkClass" style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-main);">
+                        <option value="">None</option>
+                    </select>
+                </div>
+
+                <div class="editor-toolbar">
+                    <button class="btn-tool" onclick="formatDoc('bold')" title="Bold"><b>B</b></button>
+                    <button class="btn-tool" onclick="formatDoc('italic')" title="Italic"><i>I</i></button>
+                    <button class="btn-tool" onclick="formatDoc('underline')" title="Underline"><u>U</u></button>
+                    <button class="btn-tool" onclick="formatDoc('insertUnorderedList')" title="List">•</button>
+                    <button class="btn-tool" onclick="addLink()" title="Link">🔗</button>
+                    <button class="btn-tool" onclick="addImage()" title="Image">🖼️</button>
+                </div>
+                <div id="notesEditor" contenteditable="true" class="rich-editor" placeholder="Type something..." style="flex: 1; min-height: 200px; margin-bottom: 10px;"></div>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: auto;">
+                    <button class="btn btn-ghost" style="color: #ef4444;" onclick="deleteCurrentNote()">Delete</button>
+                    <button class="btn btn-primary" onclick="saveCurrentNote()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shop Modal -->
+<div id="shopModal" class="overlay">
+    <div class="modal" style="max-width: 800px; height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; background: var(--card-bg); flex-shrink: 0;">
+            <button id="shopBackBtn" class="btn btn-ghost" style="padding: 8px; display: none;" onclick="showShopHome()">← Back</button>
+            <h2 id="shopModalTitle" style="margin:0; flex:1; font-size: 1.5rem;">Shop 🛒</h2>
+            <div class="coin-balance"><span id="shopCoinDisplay">0</span> 🪙</div>
+            <button class="btn btn-ghost" style="position: relative;" onclick="toggleCartView()">
+                🛒 <span id="cartCount" style="position: absolute; top: -5px; right: -5px; background: var(--primary); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: flex; align-items: center; justify-content: center; opacity: 0;">0</span>
+            </button>
+            <button class="btn btn-ghost" onclick="closeShop()">✕</button>
+        </div>
+
+        <div class="shop-content" style="flex: 1; overflow-y: auto; padding: 24px;">
+            <div id="shopGridView">
+                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                    <input type="text" id="shopSearch" placeholder="Search items..." oninput="renderShopGrid()">
+                </div>
+                <div id="buffsSection" style="margin-bottom: 32px;">
+                    <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Power-ups</h3>
+                    <div class="shop-grid" id="buffsGrid"></div>
+                </div>
+                <div id="streakSection" style="margin-bottom: 32px;">
+                    <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Streak Rewards</h3>
+                    <div class="shop-grid" id="streakGrid"></div>
+                </div>
+                <div id="themesSection">
+                    <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Themes</h3>
+                    <div class="shop-grid" id="themesGrid"></div>
+                </div>
+            </div>
+            <div id="shopDetailView" style="display: none; flex-direction: column; align-items: center; text-align: center;">
+                <div id="detailPreviewBox" class="theme-preview-box"></div>
+                <h1 id="detailName" style="margin: 0 0 12px; font-size: 2rem;">Item Name</h1>
+                <div id="buffQuantityControls" style="display:none; align-items:center; justify-content:center; gap:20px; margin-bottom:24px;">
+                    <button class="btn btn-ghost" onclick="adjustBuffQuantity(-1)">-</button>
+                    <span id="buffQuantity" style="font-weight:700; font-size:1.5rem;">1</span>
+                    <button class="btn btn-ghost" onclick="adjustBuffQuantity(1)">+</button>
+                </div>
+                <p id="detailDesc" style="color: var(--text-muted); max-width: 400px; margin-bottom: 24px;"></p>
+                <div id="detailPrice" style="font-size: 1.5rem; font-weight: 800; margin-bottom: 32px; color: var(--primary);">0 🪙</div>
+                <div style="display: flex; gap: 12px; width: 100%; max-width: 320px;">
+                    <button id="btnAddToCart" class="btn btn-ghost" style="flex:1; border: 1px solid var(--border);" onclick="addToCartFromDetail()">Add to Cart</button>
+                    <button id="btnBuyNow" class="btn btn-primary" style="flex:1;" onclick="buyNowFromDetail()">Buy Now</button>
+                    <div id="dualEquipBtns" style="display:none; flex:1;"></div>
+                </div>
+            </div>
+            <div id="shopCartView" style="display: none; max-width: 500px; margin: 0 auto;">
+                <h2 style="margin-bottom: 20px;">Your Cart</h2>
+                <div id="cartList" style="background:var(--card-bg); border-radius:12px; border:1px solid var(--border); overflow:hidden; margin-bottom:20px;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.25rem; font-weight: 800;">
+                    <span>Total:</span>
+                    <span id="cartTotal">0 🪙</span>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 24px; padding: 16px;" onclick="checkoutCart()">Complete Purchase</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="settingsModal" class="overlay">
+    <div class="modal">
+        <h2>Settings</h2>
+        <p>Customize your experience.</p>
+        
+        <div style="margin-bottom: 24px;">
+            <label style="margin-bottom: 12px; display: block;">Appearance</label>
+            <div style="background: var(--input-bg); padding: 4px; border-radius: 8px; display: flex; gap: 4px; margin-bottom: 16px; border: 1px solid var(--border);">
+                <button id="btn-light" class="mode-btn" onclick="setThemeMode('light')">Light</button>
+                <button id="btn-dark" class="mode-btn" onclick="setThemeMode('dark')">Dark</button>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <label style="margin:0">Dual Theme Mode (Split Screen)</label>
+                <input type="checkbox" id="settingDual" onchange="toggleDualMode()" style="width: 20px; height: 20px; margin: 0; accent-color: var(--primary);">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <label style="margin-bottom: 8px; display: block;">Redeem Code</label>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="redeemCodeInput" placeholder="Enter 6-digit code" style="margin-bottom: 0;">
+                <button id="redeemBtn" class="btn btn-primary" onclick="redeemCode()">Redeem</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <label style="margin-bottom: 8px; display: block;">Cloud Account</label>
+            <button class="btn btn-primary" style="width:100%" onclick="openAccountModal()">Manage Account</button>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <label style="margin:0">Skip Hidden Mode (site not found)</label>
+            <input type="checkbox" id="settingSkip" onchange="toggleSkip()" style="width: 20px; height: 20px; margin: 0; accent-color: var(--primary);">
+        </div>
+        
+        <div class="modal-btns">
+            <button class="btn btn-primary" onclick="closeSettings()">Done</button>
+        </div>
+    </div>
+</div>
+
+<!-- Wheel Modal -->
+<div id="wheel-modal" class="overlay">
+    <div class="modal" style="text-align:center; max-width: 900px; width: 95%; display: flex; flex-direction: row; gap: 30px; align-items: flex-start; flex-wrap: wrap; justify-content: center;">
+        
+        <!-- Wheel Section -->
+        <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; align-items: center;">
+            <h2 style="margin-top:0;">Daily Spin</h2>
+
+            <div class="wheel-tabs">
+                <div class="wheel-tab active" data-type="common" onclick="selectWheel('common')">
+                    <span style="font-size: 1.2rem;">🎡</span>
+                    <span style="font-weight: 700; font-size: 0.8rem;">Common</span>
+                    <div class="count">0</div>
+                </div>
+                <div class="wheel-tab" data-type="rare" onclick="selectWheel('rare')">
+                    <span style="font-size: 1.2rem;">💎</span>
+                    <span style="font-weight: 700; font-size: 0.8rem;">Rare</span>
+                    <div class="count">0</div>
+                </div>
+                <div class="wheel-tab" data-type="legendary" onclick="selectWheel('legendary')">
+                    <span style="font-size: 1.2rem;">👑</span>
+                    <span style="font-weight: 700; font-size: 0.8rem;">Legendary</span>
+                    <div class="count">0</div>
+                </div>
+            </div>
+            
+            <div class="wheel-container" style="position:relative; width:320px; height:320px; margin:0 auto 20px;">
+                <div class="wheel-pointer" style="position:absolute; top:-20px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:20px solid transparent; border-right:20px solid transparent; border-top:30px solid var(--text-main); z-index:10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></div>
+                <div id="wheel" style="width:100%; height:100%; border-radius:50%; border:8px solid var(--text-main); position:relative; transition:transform 5s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 0 30px rgba(255,255,255,0.2); overflow: hidden;">
+                    <!-- Segments injected by JS -->
+                </div>
+            </div>
+
+            <p id="wheel-msg" style="font-weight: 600; min-height: 1.5em;">Spin for a chance to win Daycoins!</p>
+            <button id="spin-btn" class="btn btn-primary" onclick="spin()" style="width:100%; font-size:1.2rem; padding: 15px;">Spin!</button>
+            <button class="btn btn-ghost" onclick="closeWheel()" style="margin-top:10px;">Close</button>
+        </div>
+
+        <!-- Odds Section -->
+        <div style="flex: 1; min-width: 280px; background: var(--input-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border); max-height: 500px; overflow-y: auto; text-align: left;">
+            <h3 style="margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Prize Odds</h3>
+            <div id="wheel-odds-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bid Modal -->
+<div id="bidModal" class="overlay">
+    <div class="modal" style="max-width: 400px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0">Community MOTD</h2>
+            <button class="btn btn-ghost" onclick="closeBidModal()">✕</button>
+        </div>
+        
+        <div style="background:var(--input-bg); padding:16px; border-radius:12px; margin-bottom:20px; text-align:center; border:1px solid var(--border);">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Current Message</div>
+            <div id="bid-current-msg" style="font-size:1.1rem; font-weight:700; color:var(--text-main); margin-bottom:8px; word-break: break-word;">Loading...</div>
+            <div style="font-size:0.85rem; color:var(--primary);">Highest Bid: <span id="bid-current-amount">...</span> coins</div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <div style="text-align:right; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Balance: <span id="bid-balance">...</span> 🪙</div>
+            <label>Your Bid (Min <span id="bid-min-amount">...</span>)</label>
+            <input type="number" id="bid-amount-input" placeholder="Amount">
+            
+            <label>Your Message</label>
+            <input type="text" id="bid-message-input" placeholder="Type your message..." maxlength="100">
+        </div>
+
+        <div class="modal-btns">
+            <button class="btn btn-primary" style="width:100%" onclick="submitBid()">Place Bid</button>
+        </div>
+        <p id="bid-status" style="margin-top:10px; text-align:center; font-size:0.85rem; color:var(--text-muted); min-height: 1.2em;"></p>
+    </div>
+</div>
+
+<!-- Streak Modal -->
+<div id="streakModal" class="overlay">
+    <div class="modal" style="max-width: 400px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0">Daily Streak 🔥</h2>
+            <button class="btn btn-ghost" onclick="closeStreak()">✕</button>
+        </div>
+        <div style="text-align:center; margin-bottom:20px; padding: 20px; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border);">
+            <div style="font-size:3rem; font-weight:800; color:var(--primary);" id="streakDisplay">0</div>
+            <div style="color:var(--text-muted); font-weight: 600;">Current Streak</div>
+            <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.8;">Next Reward: <span id="nextStreakReward">0</span> 🪙</div>
+        </div>
+        <div style="margin-bottom: 10px; font-weight: 600; font-size: 0.9rem;">Upcoming Rewards</div>
+        <div id="streakList" style="max-height:300px; overflow-y:auto; background:var(--surface); border-radius:12px; border: 1px solid var(--border);">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+</div>
+
+<!-- Generic Modal -->
+<div id="genericModal" class="overlay">
+    <div class="modal" style="text-align: center; max-width: 350px;">
+        <h2 id="genericTitle" style="margin-top:0">Alert</h2>
+        <p id="genericMessage" style="margin-bottom: 20px;"></p>
+        <div class="modal-btns" id="genericBtns" style="justify-content: center;">
+            <button class="btn btn-primary" onclick="closeGenericModal()">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Leaderboard Modal -->
+<div id="leaderboardModal" class="overlay">
+    <div class="modal" style="max-width: 500px; height: 80vh; display: flex; flex-direction: column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0">Leaderboard 🏆</h2>
+            <button class="btn btn-ghost" onclick="closeLeaderboard()">✕</button>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+            <button class="btn btn-primary" id="sortStreakBtn" onclick="sortLeaderboard('streak')">Streak</button>
+            <button class="btn btn-ghost" id="sortCoinsBtn" onclick="sortLeaderboard('coins')" style="border:1px solid var(--border);">Daycoins</button>
+            <button class="btn btn-ghost" id="sortDaysBtn" onclick="sortLeaderboard('days')" style="border:1px solid var(--border);">Total Days</button>
+            <button class="btn btn-ghost" id="sortPlaytimeBtn" onclick="sortLeaderboard('playtime')" style="border:1px solid var(--border);">Playtime</button>
+        </div>
+        <div id="leaderboardList" style="flex:1; overflow-y:auto; background:var(--input-bg); border-radius:12px; border:1px solid var(--border);">
+            <div class="spinner" style="margin: 40px auto;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Minigames Modal -->
+<div id="minigamesModal" class="overlay">
+    <div class="modal" style="max-width: 400px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0">Minigames 🎮</h2>
+            <button class="btn btn-ghost" onclick="closeMinigames()">✕</button>
+        </div>
+        <div class="landing-grid" style="margin-top: 0; grid-template-columns: 1fr;">
+            <h3 style="margin: 0 0 10px; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Earn Daycoins</h3>
+            <div class="landing-card" onclick="window.location.href = '../minigames/scroll/index.html'">
+                <span class="icon">📜</span>
+                <h3>Scrollbound</h3>
+                <p>Just a simple scroll, right? Complete for 1000 daycoins!</p>
+            </div>
+            <div class="landing-card" onclick="window.location.href = '../minigames/gone-fishing/index.html'">
+                <span class="icon">🎣</span>
+                <h3>Gone Fishing</h3>
+                <p>Catch fish, avoid sharks!</p>
+            </div>
+            
+            <div class="landing-card" onclick="window.location.href = '../minigames/pacman/index.html'">
+                <span class="icon">🍒</span>
+                <h3>Pacman</h3>
+                <p>Eat dots, avoid ghosts!</p>
+            </div>
+                <div class="landing-card" onclick="window.location.href = '../minigames/2048/index.html'">
+                    <span class="icon">🔢</span>
+                    <h3>2048</h3>
+                    <p>Join the numbers!</p>
+                </div>
+
+            <h3 style="margin: 20px 0 10px; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Daycoinless</h3>
+            <div class="landing-card" onclick="window.location.href = '../minigames/bottle/index.html'">
+                <span class="icon">🍾</span>
+                <h3>Bottle Flip</h3>
+                <p>Purely for fun, no coins involved.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Account Modal -->
+<div id="accountModal" class="overlay">
+    <div class="modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0">Cloud Account</h2>
+            <button class="btn btn-ghost" onclick="closeAccountModal()">✕</button>
+        </div>
+        
+        <div id="account-login-view">
+            <p>Save your progress to the cloud to access it on other devices.</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px;"><strong>Note:</strong> Custom backgrounds are not saved to the cloud to save data.</p>
+            <label>Username</label>
+            <input type="text" id="acc-username" placeholder="Username">
+            <label>Password</label>
+            <input type="password" id="acc-password" placeholder="Password">
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display:flex; align-items:center; gap:8px; font-weight:normal; cursor:pointer;">
+                    <input type="checkbox" id="acc-leaderboard-optin" style="width:auto; margin:0; accent-color:var(--primary);"> 
+                    Join Public Leaderboard
+                </label>
+            </div>
+            
+            <div class="modal-btns" style="flex-direction: column; gap: 10px;">
+                <button class="btn btn-primary" onclick="performAuth('register')" style="width: 100%; padding: 12px; font-size: 1rem;">Create Account / Register</button>
+                <button class="btn btn-ghost" onclick="performAuth('login')" style="width: 100%; border: 1px solid var(--border);">Login</button>
+            </div>
+            <button class="btn btn-ghost" style="width:100%; margin-top:10px; font-size:0.8rem; opacity:0.7;" onclick="closeAccountModal()">Stay Anonymous (Local Only)</button>
+            <p id="auth-status" style="margin-top:15px; text-align:center; font-size:1.1rem; font-weight:bold; min-height:1.2em;"></p>
+        </div>
+
+        <div id="account-manage-view" style="display:none;">
+            <div id="acc-profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                <img id="acc-profile-pic" src="https://via.placeholder.com/80" alt="Profile Picture" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                <div style="flex: 1;">
+                    <div id="acc-current-user" style="font-size:1.5rem; font-weight:700; color:var(--primary);">User</div>
+                    <p id="acc-bio-display" style="font-size: 0.85rem; color: var(--text-muted); margin: 5px 0 0; min-height: 3em; white-space: pre-wrap; word-break: break-word;"></p>
+                </div>
+                <button class="btn btn-ghost" onclick="toggleProfileEdit(true)">Edit</button>
+            </div>
+            <div id="acc-profile-edit-section" style="display:none; margin-bottom: 20px;">
+                <label>Profile Picture URL</label>
+                <input type="text" id="acc-pfp-url" placeholder="https://example.com/image.png">
+                <label>Bio (max 150 chars)</label>
+                <textarea id="acc-bio-input" maxlength="150" rows="3" style="resize: vertical;"></textarea>
+                <div class="modal-btns" style="margin-top: 10px;">
+                    <button class="btn btn-ghost" onclick="toggleProfileEdit(false)">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+                </div>
+            </div>
+            
+            <div id="acc-stats-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;"></div>
+            
+            <div style="margin-bottom: 15px; padding: 10px; background: var(--input-bg); border-radius: 8px; border: 1px solid var(--border);">
+                <label style="display:flex; align-items:center; justify-content:space-between; margin:0; cursor:pointer;">
+                    <span>Public Leaderboard</span>
+                    <input type="checkbox" id="acc-leaderboard-toggle" onchange="toggleLeaderboard()" style="width:20px; height:20px; margin:0; accent-color:var(--primary);">
+                </label>
+            </div>
+            
+            <div style="display:grid; gap:10px;">
+                <button class="btn btn-primary" onclick="performAuth('update')">💾 Save Current Progress</button>
+                <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin: 0;">(Custom backgrounds are not saved) (autosaves progress)</p>
+                <button class="btn btn-ghost" style="border:1px solid var(--border)" onclick="performAuth('login')">📂 Load from Cloud</button>
+                <button class="btn btn-ghost" style="border:1px solid var(--border)" onclick="openFriendsModal()">🤝 Friends</button>
+                <button class="btn btn-ghost" style="color:var(--Hard)" onclick="logout()">Logout</button>
+            </div>
+            <p id="manage-status" style="margin-top:15px; text-align:center; font-size:0.75rem; color:var(--text-muted); min-height:1.2em;"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Friends Modal -->
+<div id="friendsModal" class="overlay">
+    <div class="modal" style="max-width: 500px; height: 80vh; display: flex; flex-direction: column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0">Friends 🤝</h2>
+            <button class="btn btn-ghost" onclick="closeFriendsModal()">✕</button>
+        </div>
+        
+        <div class="shop-toggle">
+            <div id="tab-friends-list" class="shop-tab active" onclick="setFriendTab('list')">My Friends</div>
+            <div id="tab-friends-req" class="shop-tab" onclick="setFriendTab('requests')">Requests</div>
+            <div id="tab-friends-add" class="shop-tab" onclick="setFriendTab('add')">Add Friend</div>
+            <div class="shop-slider" id="friendSlider"></div>
+        </div>
+
+        <div id="friendsListContent" style="flex:1; overflow-y:auto; display:block;">
+            <div class="spinner" style="margin:40px auto;"></div>
+        </div>
+        
+        <div id="friendRequestsContent" style="flex:1; overflow-y:auto; display:none;">
+            <div style="text-align:center; color:var(--text-muted); padding:20px;">No pending requests.</div>
+        </div>
+
+        <div id="addFriendContent" style="flex:1; overflow-y:auto; display:none; padding-top:20px;">
+            <label>Enter Username</label>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="addFriendInput" placeholder="Username" style="flex:1;">
+                <button class="btn btn-primary" onclick="sendFriendRequestUI()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Modal -->
+<div id="chatModal" class="overlay">
+    <div class="modal" style="max-width: 400px; height: 70vh; display: flex; flex-direction: column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div id="chatStatusIndicator" style="width:10px; height:10px; border-radius:50%; background:#ccc;"></div>
+                <h2 style="margin:0; font-size:1.2rem;" id="chatTitle">Chat</h2>
+            </div>
+            <button class="btn btn-ghost" onclick="closeChatModal()">✕</button>
+        </div>
+        <div id="chatMessages" style="flex:1; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px; padding-right:5px;"></div>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="chatInput" placeholder="Type a message..." style="margin:0; flex:1;" onkeydown="if(event.key==='Enter') sendChatMessage()">
+            <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+</div>
+
+<!-- Public Profile Modal -->
+<div id="publicProfileModal" class="overlay">
+    <div class="modal" style="max-width: 400px;">
+        <div style="text-align:right;"><button class="btn btn-ghost" onclick="closePublicProfile()">✕</button></div>
+        <div id="publicProfileContent" style="text-align:center;">
+            <div class="spinner" style="margin:20px auto;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Theme Studio Modal -->
+<div id="themeModal" class="overlay">
+    <div class="modal" style="max-width: 900px; width: 95%; height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+        <div style="padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg);">
+            <h2 style="margin:0">Custom Background</h2>
+            <button class="btn btn-ghost" onclick="closeThemeModal()">✕</button>
+        </div>
+        
+        <div style="display: flex; flex: 1; min-height: 0; overflow: hidden; flex-direction: row;">
+            <!-- Sidebar Controls -->
+            <div style="width: 320px; padding: 20px; overflow-y: auto; border-right: 1px solid var(--border); flex-shrink: 0; background: var(--surface);">
+
+                <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="document.getElementById('bgUpload').click()">Upload Image</button>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0; text-align: center;">Supports JPG, PNG, GIF</p>
+                    
+                    <div id="customBgControls" style="display: none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
+                        <label style="font-size: 0.8rem;">Text Contrast</label>
+                        <div style="background: var(--input-bg); padding: 4px; border-radius: 8px; display: flex; gap: 4px; border: 1px solid var(--border);">
+                            <button id="btn-text-dark" class="mode-btn" onclick="setCustomBrightness('dark')">Dark Text</button>
+                            <button id="btn-text-light" class="mode-btn" onclick="setCustomBrightness('light')">Light Text</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Area -->
+            <div style="flex: 1; background: #333; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; overflow: hidden;">
+                <!-- The Preview Container -->
+                <div id="previewContainer" style="width: 100%; max-width: 360px; height: 600px; border-radius: 24px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; font-size: 14px;">
+                    <!-- Mock Header -->
+                    <div style="background: var(--header-bg); padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px);">
+                        <span style="font-weight: 700; color: var(--text-main);">Schedule</span>
+                        <div style="width: 24px; height: 24px; background: var(--primary); border-radius: 50%;"></div>
+                    </div>
+                    <!-- Mock Content -->
+                    <div style="flex: 1; background: var(--surface); padding: 12px; position: relative; backdrop-filter: blur(10px);">
+                        <div style="width: 40px; height: 100%; border-right: 1px solid var(--border); position: absolute; left: 0; top: 0; background: var(--gutter-bg);"></div>
+                        <div style="margin-left: 40px; padding-top: 20px;">
+                            <div style="background: linear-gradient(135deg, var(--Average), #d97706); padding: 10px; border-radius: 8px; color: white; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                <div style="font-weight: 700;">Math</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">08:00 - 09:00</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, var(--Easy), #059669); padding: 10px; border-radius: 8px; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                <div style="font-weight: 700;">Science</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">09:05 - 10:00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js?v=3.3"></script>
+
+</body>
+</html>

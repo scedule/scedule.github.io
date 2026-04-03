@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5QHY2PMM4L"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5QHY2PMM4L');
+</script>
+  <title>Remote Admin Panel</title>
+  <link rel="stylesheet" href="../theme.css">
+  <style>
+    :root {
+        --bg: linear-gradient(180deg, #51aedd 0%, #aee3ff 50%, #7dc94e 100%);
+        --text: #333;
+        --card-bg: rgba(255, 255, 255, 0.85);
+        --card-shadow: rgba(0, 0, 0, 0.15);
+        --primary: #1a5a80;
+        --border: rgba(0,0,0,0.1);
+        --input-bg: white;
+        --btn-bg: #0078d7;
+        --list-bg: rgba(255,255,255,0.4);
+        --item-border: rgba(0,0,0,0.05);
+        --nav-btn-bg: rgba(255,255,255,0.4);
+        --nav-btn-active: #0078d7;
+        
+        /* Map new theme.css vars to admin vars */
+        --text: var(--text-main);
+        --btn-bg: var(--primary);
+    }
+    .landing-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 15px; width: 100%; margin-top: 20px;
+    }
+    .landing-card {
+        border: 1px solid var(--border); border-radius: 12px; padding: 15px;
+        text-align: center; cursor: pointer; transition: all 0.2s;
+        background: var(--input-bg);
+        text-decoration: none; color: var(--text);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .landing-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: var(--primary); }
+    .landing-card .icon { font-size: 2rem; margin-bottom: 10px; display: block; }
+    .landing-card h3 { margin: 0 0 5px; color: var(--primary); font-size: 1rem; border: none; padding: 0; }
+    .landing-card p { margin: 0; font-size: 0.8rem; opacity: 0.8; }
+    .dark {
+        --bg: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+        --text: #f8fafc;
+        --card-bg: rgba(30, 41, 59, 0.85);
+        --card-shadow: rgba(0, 0, 0, 0.5);
+        --primary: #60a5fa;
+        --border: rgba(255,255,255,0.1);
+        --input-bg: #0f172a;
+        --btn-bg: #3b82f6;
+        --list-bg: rgba(0,0,0,0.2);
+        --item-border: rgba(255,255,255,0.1);
+        --nav-btn-bg: rgba(0,0,0,0.2);
+        --nav-btn-active: #3b82f6;
+    }
+
+    body {
+        margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif;
+        background: none;
+        min-height: 100vh; min-height: 100dvh; 
+        display: flex; align-items: center; justify-content: center; color: var(--text);
+        transition: background 0.3s, color 0.3s;
+    }
+    #bg-container {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background-image: var(--bg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center;
+        background-color: var(--base-bg, transparent);
+        z-index: -1000;
+        pointer-events: none;
+    }
+
+    /* --- Dual Theme Split Logic --- */
+    body.dual-theme #bg-container {
+        background: none !important;
+    }
+    body.dual-theme #bg-container::before,
+    body.dual-theme #bg-container::after {
+        content: ''; position: absolute; top: 0; bottom: 0;
+        background-size: cover; background-position: center;
+        background-repeat: no-repeat;
+    }
+    body.dual-theme #bg-container::before {
+        background: var(--bg-left);
+        width: 50vw;
+        left: 0;
+    }
+    body.dual-theme #bg-container::after {
+        background: var(--bg-right);
+        width: 50vw;
+        right: 0;
+    }
+
+    /* Split Backgrounds for Containers */
+    body.dual-theme .card, body.dual-theme .landing-card, body.dual-theme input, body.dual-theme textarea, body.dual-theme select {
+        background: linear-gradient(90deg, var(--card-bg-left) 50%, var(--card-bg-right) 50%) !important;
+        background-attachment: scroll !important;
+        border-color: var(--border-left) !important;
+    }
+
+    /* Split Text Color */
+    body.dual-theme h1, body.dual-theme h2, body.dual-theme h3, 
+    body.dual-theme p, body.dual-theme span, body.dual-theme div, 
+    body.dual-theme a, body.dual-theme label {
+        background: linear-gradient(90deg, var(--text-main-left) 50%, var(--text-main-right) 50%);
+        background-attachment: fixed;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+    }
+    body.dual-theme .icon, body.dual-theme button, body.dual-theme .delete-btn {
+        background: var(--btn-bg) !important; -webkit-text-fill-color: initial !important; color: white !important;
+    }
+
+    .card {
+        background: var(--card-bg); backdrop-filter: blur(10px);
+        padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px var(--card-shadow);
+        max-width: 450px; width: 90%; text-align: center; margin: 20px;
+        transition: background 0.3s, box-shadow 0.3s;
+    }
+    h2 { color: var(--primary); margin-bottom: 20px; }
+    h3 { font-size: 1rem; color: var(--primary); margin-top: 25px; text-align: left; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+    input, textarea, select { 
+        width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; 
+        border: 1px solid var(--border); background: var(--input-bg); 
+        font-size: 1rem; box-sizing: border-box; color: var(--text);
+    }
+    button { width: 100%; padding: 12px; margin-top: 10px; background: var(--btn-bg); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    button:disabled { background: #999; }
+    .schedule-list { margin-top: 15px; text-align: left; max-height: 250px; overflow-y: auto; background: var(--list-bg); padding: 10px; border-radius: 10px; }
+    .schedule-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--item-border); }
+    .item-info { flex: 1; font-size: 0.9rem; }
+    .item-date { font-weight: bold; color: var(--primary); display: block; }
+    .delete-btn { background: #d93025; width: auto; padding: 5px 10px; font-size: 0.75rem; margin-left: 10px; }
+    .error { color: #d93025; font-size: 0.85rem; margin-top: 10px; min-height: 1.2em; }
+    .nav-btn { flex: 1; background: var(--nav-btn-bg); color: var(--text); margin-top: 0; border: 1px solid var(--border); }
+    .nav-btn.active { background: var(--nav-btn-active); color: white; border-color: var(--nav-btn-active); }
+    #motdSuccess { color: #2e7d32; font-weight: bold; margin-top: 10px; }
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+        z-index: 1000;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+
+<div id="bg-container"></div>
+
+<div class="card" id="hubCard" style="max-width: 600px;">
+  <h2>Admin Hub</h2>
+  <p>Select a panel to access.</p>
+  <div class="landing-grid">
+    <div class="landing-card" onclick="showLogin('main')">
+      <span class="icon">⚙️</span>
+      <h3>Main Admin</h3>
+      <p>Schedule & MOTD</p>
+    </div>
+    <div class="landing-card" onclick="showLogin('andrew')">
+      <span class="icon">👤</span>
+      <h3>Alice's Panel</h3>
+      <p>Alice's MOTD</p>
+    </div>
+    <a href="../map.html" class="landing-card">
+      <span class="icon">⬅️</span>
+      <h3>Back to Site Map</h3>
+      <p>Site Map</p>
+    </a>
+    <div class="landing-card" onclick="showLogin('mod')">
+      <span class="icon">🛡️</span>
+      <h3>Moderator</h3>
+      <p>Manage User Content</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN ADMIN LOGIN -->
+<div class="card hidden" id="loginCard_main">
+  <h2>Admin Login</h2>
+  <button class="delete-btn" style="background: transparent; color: var(--text); margin-bottom: 10px; width: auto; padding: 0;" onclick="showHub()">← Back</button>
+  <input type="password" id="passcode_main" placeholder="Enter passcode">
+  <button id="loginBtn_main" onclick="loginMain()">Login</button>
+
+  <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+    <p style="font-size: 0.85rem; margin: 0 0 10px 0; opacity: 0.8;">Have a one-time code?</p>
+    <button id="toggleCodeBtn_main" onclick="showCodeInput('main')" style="background: var(--list-bg); color: var(--text); font-size: 0.85rem; padding: 8px;">Redeem Code</button>
+    <input type="text" id="codeInput_main" placeholder="6-digit code" style="display:none; margin-bottom: 5px;">
+    <button id="redeemBtn_main" onclick="redeemCode('main')" style="display:none; background: var(--primary);">Redeem & Login</button>
+  </div>
+
+  <div class="error" id="loginError_main"></div>
+</div>
+
+<!-- ALICE LOGIN -->
+<div class="card hidden" id="loginCard_andrew">
+  <h2>Alice's Login</h2>
+  <button class="delete-btn" style="background: transparent; color: var(--text); margin-bottom: 10px; width: auto; padding: 0;" onclick="showHub()">← Back</button>
+  <input type="password" id="passcode_andrew" placeholder="Enter passcode">
+  <button id="loginBtn_andrew" onclick="loginAndrew()">Login</button>
+
+  <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+    <p style="font-size: 0.85rem; margin: 0 0 10px 0; opacity: 0.8;">Have a one-time code?</p>
+    <button id="toggleCodeBtn_andrew" onclick="showCodeInput('andrew')" style="background: var(--list-bg); color: var(--text); font-size: 0.85rem; padding: 8px;">Redeem Code</button>
+    <input type="text" id="codeInput_andrew" placeholder="6-digit code" style="display:none; margin-bottom: 5px;">
+    <button id="redeemBtn_andrew" onclick="redeemCode('andrew')" style="display:none; background: var(--primary);">Redeem & Login</button>
+  </div>
+
+  <div class="error" id="loginError_andrew"></div>
+</div>
+
+<!-- MOD LOGIN -->
+<div class="card hidden" id="loginCard_mod">
+  <h2>Moderator Login</h2>
+  <button class="delete-btn" style="background: transparent; color: var(--text); margin-bottom: 10px; width: auto; padding: 0;" onclick="showHub()">← Back</button>
+  <input type="password" id="passcode_mod" placeholder="Enter passcode">
+  <button id="loginBtn_mod" onclick="loginMod()">Login</button>
+
+  <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+    <p style="font-size: 0.85rem; margin: 0 0 10px 0; opacity: 0.8;">Have a one-time code?</p>
+    <button id="toggleCodeBtn_mod" onclick="showCodeInput('mod')" style="background: var(--list-bg); color: var(--text); font-size: 0.85rem; padding: 8px;">Redeem Code</button>
+    <input type="text" id="codeInput_mod" placeholder="6-digit code" style="display:none; margin-bottom: 5px;">
+    <button id="redeemBtn_mod" onclick="redeemCode('mod')" style="display:none; background: var(--primary);">Redeem & Login</button>
+  </div>
+
+  <div class="error" id="loginError_mod"></div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="card hidden" id="adminCard_main">
+  <button class="delete-btn" style="background: transparent; color: var(--text); margin-bottom: 10px; width: auto; padding: 0;" onclick="showHub()">← Back to Hub</button>
+  <h2>MOTD Scheduler</h2>
+  <div style="text-align: left; font-size: 0.85rem; color: #555;">Target Date (Blank for default)</div>
+  <input type="date" id="targetDate">
+  <textarea id="motdText" rows="3" placeholder="Enter message..."></textarea>
+  <button id="updateBtn" onclick="updateMotd()">Save to Schedule</button>
+  <div class="error" id="motdError"></div>
+  <div id="motdSuccess"></div>
+  <h3>Current Schedule</h3>
+  <div class="schedule-list" id="scheduleList"></div>
+  <h3>Developer Tools</h3>
+  <input type="number" id="coinAmount" placeholder="Amount to add">
+  <button onclick="grantCoins()" style="background: #10b981;">Grant Coins</button>
+  <button onclick="grantInfiniteCoins()" style="background: #f59e0b;">Grant Infinite Daycoins (∞)</button>
+  <button onclick="removeInfiniteCoins()" style="background: #ef4444;">Remove Infinite Daycoins</button>
+  <h3>Streak Tools</h3>
+  <input type="number" id="streakAmount" placeholder="Set Streak Count">
+  <button onclick="setStreak()" style="background: #8b5cf6;">Set Streak</button>
+  <button onclick="setLastVisitYesterday()" style="background: #ec4899;">Set Last Visit to Yesterday</button>
+  <h3>Code Generator</h3>
+  <div style="background: var(--list-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--item-border);">
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <select id="codeType" style="flex: 1; margin: 0;" onchange="updatePlaceholder()">
+        <option value="daycoins">Daycoins</option>
+        <option value="admin">Admin Rank</option>
+      </select>
+      <input type="number" id="codeValue" placeholder="Amount of Daycoins" style="flex: 2; margin: 0;">
+      <button onclick="setInfinite()" style="width: auto; padding: 0 15px; margin: 0; background: #f59e0b;" title="Set to Infinite">∞</button>
+    </div>
+    <button onclick="createCode(this)" style="background: #8b5cf6; margin-top: 0;">Generate Code</button>
+    <div id="generatedCodeDisplay"></div>
+  </div>
+</div>
+
+<!-- ALICE DASHBOARD -->
+<div class="card hidden" id="adminCard_andrew">
+  <button class="delete-btn" style="background: transparent; color: var(--text); margin-bottom: 10px; width: auto; padding: 0;" onclick="showHub()">← Back to Hub</button>
+  <h2>Alice's Panel</h2>
+  <div style="text-align: left; font-size: 0.85rem; color: #555;">Target Date (Blank for default)</div>
+  <input type="date" id="targetDate_andrew">
+  <textarea id="motdText_andrew" rows="3" placeholder="Enter message..."></textarea>
+  <button id="updateBtn_andrew" onclick="updateMotdAndrew()">Save to Schedule</button>
+  <div class="error" id="motdError_andrew"></div>
+  <div id="motdSuccess_andrew"></div>
+  <h3>Current Schedule</h3>
+  <div class="schedule-list" id="scheduleList_andrew"></div>
+</div>
+
+<!-- MOD DASHBOARD -->
+<div class="card hidden" id="adminCard_mod" style="max-width: 800px;">
+  <button class="delete-btn" style="background: transparent; color: var(--text); margin-bottom: 10px; width: auto; padding: 0;" onclick="showHub()">← Back to Hub</button>
+  <h2>Moderator Dashboard</h2>
+  <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button onclick="loadModView('ratings')" class="nav-btn" id="btn-ratings">Ratings</button>
+      <button onclick="loadModView('proposals')" class="nav-btn" id="btn-proposals">Proposals</button>
+      <button onclick="loadModView('overrides')" class="nav-btn" id="btn-overrides">Overrides</button>
+  </div>
+  <div id="loading_mod" class="hidden" style="margin: 20px 0;">Loading...</div>
+  <div id="contentList_mod" class="schedule-list"></div>
+</div>
+
+<div class="modal-overlay hidden" id="customAlert">
+  <div class="card" style="max-width: 300px; margin: 0;">
+    <h3 style="margin-top: 0; border: none; text-align: center;">Notification</h3>
+    <p id="customAlertMsg"></p>
+    <button onclick="closeCustomAlert()">OK</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCROLLBOUND • The Eternal Descent</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        :root {
+            --bg: #0a0014;
+            --accent: #00ffcc;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--bg);
+            color: #ddffdd;
+            font-family: 'Press Start 2P', system-ui;
+            overflow: hidden;           /* Hide scrollbar */
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        /* Completely hide scrollbar */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .game-wrapper {
+            width: 820px;
+            max-width: 90vw;
+            height: 92vh;
+            background: rgba(20, 0, 40, 0.85);
+            border: 8px solid var(--accent);
+            border-radius: 20px;
+            box-shadow: 0 0 60px rgba(0, 255, 204, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 90px;
+            background: rgba(10, 0, 20, 0.98);
+            border-bottom: 6px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+            font-size: 15px;
+        }
+        
+        #total {
+            font-size: 28px;
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent);
+        }
+        
+        .center-content {
+            height: calc(100% - 90px);
+            padding: 40px 60px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            position: relative;
+        }
+        
+        /* Hide scrollbar but allow scrolling */
+        .center-content::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .scene {
+            min-height: 520px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 40px;
+            border: 4px dashed rgba(0, 255, 204, 0.3);
+            margin-bottom: 80px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .scene.active {
+            display: flex;
+            animation: fadeInScene 1.2s ease;
+        }
+        
+        @keyframes fadeInScene {
+            from { opacity: 0; transform: translateY(60px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .scene h2 {
+            color: var(--accent);
+            font-size: 26px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px var(--accent);
+        }
+        
+        .scene p {
+            font-size: 17px;
+            line-height: 1.7;
+            opacity: 0.95;
+        }
+        
+        .scene .emoji {
+            font-size: 90px;
+            margin-bottom: 30px;
+            opacity: 0.25;
+        }
+        
+        #journal-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 160px;
+            background: rgba(10, 0, 20, 0.95);
+            border: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Start Screen Overlay */
+        #start-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            color: #ddffdd;
+            text-align: center;
+        }
+        #start-screen h1 {
+            font-size: 40px;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent);
+            margin-bottom: 20px;
+        }
+        #start-screen p {
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        #start-screen button {
+            padding: 15px 30px;
+            background: var(--accent); color: #0a0014; border: none; font-family: inherit; font-size: 20px; cursor: pointer;
+        }
+
+        /* Event Popup Overlay */
+        #event-popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 0, 25, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            padding: 40px;
+        }
+        #event-popup-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .popup-card {
+            text-align: center;
+            max-width: 650px;
+            animation: popupBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes popupBounce {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .popup-history {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid var(--accent);
+            width: 100%;
+            max-width: 500px;
+            font-size: 11px;
+            color: #aaa;
+            max-height: 150px;
+            overflow-y: hidden;
+            mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+        }
+        
+        .journal-entry {
+            margin-bottom: 12px;
+            padding-left: 12px;
+            border-left: 4px solid var(--accent);
+        }
+        
+        #ending-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 0, 20, 0.97);
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+        
+        .modal-content {
+            width: 760px;
+            max-width: 90vw;
+            border: 8px solid var(--accent);
+            background: #1a0033;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        
+        .scroll-hint {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--accent);
+            font-size: 14px;
+            animation: bounce 2s infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to Beta Button -->
+    <a href="../../beta/index.html" style="position: fixed; top: 20px; left: 20px; padding: 10px 20px; background: rgba(0, 255, 204, 0.1); border: 2px solid var(--accent); border-radius: 8px; text-decoration: none; color: var(--accent); font-size: 10px; z-index: 2000; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.color='#0a0014'" onmouseout="this.style.background='rgba(0, 255, 204, 0.1)'; this.style.color='var(--accent)'">← BACK TO BETA</a>
+
+    <!-- Start Screen Overlay -->
+    <div id="start-screen">
+        <h1>SCROLLBOUND</h1>
+        <p>The Eternal Descent</p>
+        <button onclick="startGame()">START DESCENT</button>
+        <p style="font-size:12px; opacity:0.7; margin-top:20px;">(Click to play music)</p>
+    </div>
+
+    <div class="game-wrapper">
+        <!-- HUD -->
+        <div id="hud">
+            <div>🌀 SCROLLBOUND</div>
+            <div style="text-align:center;">
+                <div style="font-size:11px; opacity:0.6;">TOTAL DESCENT</div>
+                <div id="total">0</div>
+            </div>
+            <div onclick="resetGame()" style="cursor:pointer; color:#ff88ff;">RESTART</div>
+        </div>
+
+        <!-- Scrollable centered content -->
+        <div class="center-content" id="scroll-area">
+            
+            <!-- Scene 0 - Starting -->
+            <div class="scene active" id="scene-0">
+                <div class="emoji">🌌</div>
+                <h2>THE ETERNAL ABYSS</h2>
+                <p>Scroll slowly or rapidly.<br>Your pace will shape your fate.</p>
+                <p style="margin-top:40px; font-size:14px; opacity:0.7;">
+                    The journey is now 100 times longer.<br>
+                    Only the truly dedicated will reach the end.
+                </p>
+            </div>
+
+            <!-- Milestone scenes (will be revealed one by one) -->
+            <div class="scene" id="scene-1">
+                <div class="emoji">🪨</div>
+                <h2>THE SHADOW VEIL</h2>
+                <p id="text-1">You have crossed the first threshold...</p>
+            </div>
+
+            <div class="scene" id="scene-2">
+                <div class="emoji">🌫️</div>
+                <h2>MIST OF ECHOES</h2>
+                <p id="text-2">The whispers grow louder...</p>
+            </div>
+
+            <div class="scene" id="scene-3">
+                <div class="emoji">🔥</div>
+                <h2>THE FLAME CANYON</h2>
+                <p id="text-3">The heat tests your resolve.</p>
+            </div>
+
+            <div class="scene" id="scene-4">
+                <div class="emoji">🧿</div>
+                <h2>CRYSTAL SANCTUM</h2>
+                <p id="text-4">A rare moment of clarity appears.</p>
+            </div>
+
+            <div class="scene" id="scene-5">
+                <div class="emoji">⚡</div>
+                <h2>THUNDER VEIN</h2>
+                <p id="text-5">The storm judges your speed.</p>
+            </div>
+
+            <div class="scene" id="scene-6">
+                <div class="emoji">🌿</div>
+                <h2>THE FORGOTTEN GARDEN</h2>
+                <p id="text-6">Life still clings to the depths.</p>
+            </div>
+
+            <div class="scene" id="scene-7">
+                <div class="emoji">🌀</div>
+                <h2>THE FINAL SPIRAL</h2>
+                <p id="text-7">You approach the heart of the abyss...</p>
+            </div>
+
+            <!-- Extra height to force massive scrolling -->
+            <div style="height: 1200000px; width: 100%;"></div>
+        </div>
+
+        <!-- Journal -->
+        <div id="journal-panel">
+            <strong>🪶 SCROLL JOURNAL</strong>
+            <div id="journal"></div>
+        </div>
+    </div>
+
+    <!-- Centered Event Popup -->
+    <div id="event-popup-overlay">
+        <div class="popup-card">
+            <div id="popup-emoji" class="emoji" style="font-size: 100px; margin-bottom: 20px;"></div>
+            <h2 id="popup-title" style="color: var(--accent); font-size: 28px; margin-bottom: 20px; text-shadow: 0 0 20px var(--accent);"></h2>
+            <p id="popup-text" style="font-size: 18px; line-height: 1.6; color: #fff;"></p>
+            <div class="popup-history" id="popup-history-list"></div>
+        </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" id="hint">↓ SCROLL TO DESCEND ↓</div>
+
+    <!-- Ending Modal -->
+    <div id="ending-modal">
+        <div class="modal-content">
+            <h1 id="ending-title" style="color:#00ffcc; font-size:32px; margin-bottom:20px;">THE DESCENT ENDS</h1>
+            <div id="ending-text" style="line-height:1.8; font-size:16px; margin:30px 0;"></div>
+            <div id="final-stats" style="background:rgba(0,255,204,0.1); padding:20px; border-radius:8px; margin:25px 0;"></div>
+            <button onclick="resetGame()" style="padding:15px 50px; background:#00ffcc; color:#0a0014; border:none; font-family:inherit; font-size:18px; cursor:pointer;">
+                BEGIN NEW DESCENT
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let totalScrolled = 0;
+        let lastY = 0;
+        let rushScore = 0;
+        let eventsTriggered = new Set();
+        let endingShown = false;
+        
+        let musicStarted = false;
+
+        const milestones = [
+            { id: 1, pos: 80000,  slowText: "You move with patience. A hidden rune lights up and grants you wisdom.", fastText: "You rush forward. The rune shatters, awakening a shadow that now follows you." },
+            { id: 2, pos: 220000, slowText: "The mist parts for the patient. You hear the true voices of the lost.", fastText: "You tear through the mist. Echoes scream and a trap nearly claims you." },
+            { id: 3, pos: 420000, slowText: "You pause at the flames. They reveal ancient knowledge instead of burning you.", fastText: "You charge the canyon. The flames scorch you, but you emerge forged." },
+            { id: 4, pos: 680000, slowText: "The crystals sing for you. They grant a protective aura.", fastText: "You blast past the sanctum. The crystals shatter and guardians awaken." },
+            { id: 5, pos: 920000, slowText: "The garden blooms only for the calm. Allies join your side.", fastText: "You trample through the garden. The last flowers wither behind you." },
+            { id: 6, pos: 1180000, slowText: "Your balanced spirit calms the final spiral.", fastText: "You become the storm itself. The abyss bends to your fury." }
+        ];
+
+        const totalEl = document.getElementById('total');
+        const journalEl = document.getElementById('journal');
+        const endingModal = document.getElementById('ending-modal');
+        const endingTitle = document.getElementById('ending-title');
+        const endingText = document.getElementById('ending-text');
+        const finalStats = document.getElementById('final-stats');
+        const hint = document.getElementById('hint');
+
+        const popupOverlay = document.getElementById('event-popup-overlay');
+        const popupEmoji = document.getElementById('popup-emoji');
+        const popupTitle = document.getElementById('popup-title');
+        const popupText = document.getElementById('popup-text');
+        const popupHistory = document.getElementById('popup-history-list');
+
+        const bgMusic = new Audio('Pizza-Time-Never-Ends.aac');
+        bgMusic.loop = true;
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.querySelector('.game-wrapper').style.display = 'block';
+            bgMusic.play().catch(e => console.log("Autoplay blocked:", e));
+            musicStarted = true;
+            // Initial journal entry
+            addJournalEntry("The descent begins...", "🌌");
+            document.getElementById('scroll-area').addEventListener('scroll', updateScroll);
+        }
+
+        function triggerEvent(m, isSlow) {
+            const text = isSlow ? m.slowText : m.fastText;
+            const emoji = isSlow ? '🌟' : '🌩️';
+
+            // Setup Popup
+            popupEmoji.textContent = m.emoji;
+            popupTitle.textContent = m.title;
+            popupText.textContent = text;
+            
+            // Mirror current journal into popup
+            popupHistory.innerHTML = `<strong>JOURNAL HISTORY</strong><br>` + journalEl.innerHTML;
+
+            // Show Popup
+            popupOverlay.classList.add('active');
+
+            setTimeout(() => {
+                popupOverlay.classList.remove('active');
+                // Add to permanent journal after fade
+                addJournalEntry(text, emoji);
+                if (!isSlow) rushScore++;
+            }, 4000);
+        }
+
+        function addJournalEntry(text, emoji = '📜') {
+            const entry = document.createElement('div');
+            entry.className = 'journal-entry';
+            entry.innerHTML = `${emoji} ${text}`;
+            journalEl.appendChild(entry);
+            journalEl.scrollTop = journalEl.scrollHeight;
+            hint.style.opacity = '0'; // Hide hint once they've scrolled enough
+        }
+
+        function getPace(speed) {
+            if (speed < 1.5) return "SLOW & WISE";
+            if (speed < 4) return "STEADY";
+            return "RUSHING";
+        }
+
+        function updateScroll() {
+            const currentY = document.getElementById('scroll-area').scrollTop;
+            const deltaY = Math.max(0, currentY - lastY);
+            if (deltaY > 0) {
+                totalScrolled += deltaY;
+            }
+
+            totalEl.textContent = Math.floor(totalScrolled).toLocaleString();
+
+            // Check milestones
+            milestones.forEach(m => {
+                if (totalScrolled >= m.pos && !eventsTriggered.has(m.id)) {
+                    eventsTriggered.add(m.id);
+                    
+                    const speed = deltaY / 16; // rough speed estimate
+                    const isSlow = speed < 2.8;
+                    
+                    // Show the corresponding scene
+                    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+                    document.getElementById(`scene-${m.id}`).classList.add('active');
+                    
+                    // Update scene text based on pace
+                    const sceneText = document.getElementById(`text-${m.id}`);
+                    if (sceneText) {
+                        sceneText.textContent = isSlow ? m.slowText : m.fastText;
+                    }
+                    
+                    triggerEvent(m, isSlow);
+                }
+            });
+
+            // Ending condition
+            if (totalScrolled > 1250000 && !endingShown) {
+                endingShown = true;
+                showEnding();
+            }
+
+            lastY = currentY;
+        }
+
+        function showEnding() {
+            bgMusic.pause();
+            const rushPercent = Math.round((rushScore / milestones.length) * 100);
+            
+            let title, story, stats, baseReward = 1000;
+            
+            if (rushScore >= 4) {
+                title = "🌩️ STORMBORN";
+                story = "You tore through the abyss at blinding speed. Guardians awakened, traps sprung, and the spiral itself trembled before your fury.";
+                stats = "RUSH LEVEL: MAXIMUM<br>Distance: " + Math.floor(totalScrolled).toLocaleString() + " units";
+            } else if (rushScore >= 2) {
+                title = "☯️ THE BALANCED ONE";
+                story = "You walked the line between patience and power. The abyss respected your rhythm and revealed many of its secrets.";
+                stats = "RUSH LEVEL: MODERATE<br>Distance: " + Math.floor(totalScrolled).toLocaleString() + " units";
+            } else {
+                title = "🌌 THE SAGE OF THE DEEP";
+                story = "Your calm, deliberate descent unlocked every hidden truth. The abyss opened its heart only to the truly patient.";
+                stats = "RUSH LEVEL: MINIMAL<br>Distance: " + Math.floor(totalScrolled).toLocaleString() + " units";
+            }
+            
+            // Award Daycoins
+            const multiplierExpires = parseInt(localStorage.getItem('globalMultiplierExpires') || '0');
+            if (Date.now() < multiplierExpires) baseReward *= 2;
+            
+            let currentCoins = localStorage.getItem('daycoins');
+            if (currentCoins !== 'Infinity') {
+                localStorage.setItem('daycoins', (parseInt(currentCoins || '0') + baseReward).toString());
+            }
+
+            stats += `<br><br><span style="color:#ffd700">Daycoins Earned: ${baseReward}</span>`;
+            endingTitle.textContent = title;
+            endingText.innerHTML = story;
+            finalStats.innerHTML = stats;
+            endingModal.style.display = 'flex';
+        }
+
+        window.resetGame = function() {
+            bgMusic.currentTime = 0;
+            bgMusic.play();
+            musicStarted = true;
+            totalScrolled = 0;
+            rushScore = 0;
+            eventsTriggered.clear();
+            endingShown = false;
+            lastY = 0;
+            
+            journalEl.innerHTML = `<div class="journal-entry">🌌 You have entered the Eternal Abyss...</div>`;
+            
+            // Reset all scenes
+            document.querySelectorAll('.scene').forEach((scene, i) => {
+                scene.classList.toggle('active', i === 0);
+            });
+            
+            endingModal.style.display = 'none';
+            document.getElementById('scroll-area').scrollTop = 0;
+            totalEl.textContent = '0';
+            hint.style.opacity = '0.7';
+            popupOverlay.classList.remove('active');
+        };
+
+        // Initialize
+        window.onload = function() {
+            // Hide game wrapper initially, show start screen
+            document.querySelector('.game-wrapper').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+
+            // Set initial journal entry for when game starts
+            journalEl.innerHTML = `<div class="journal-entry">🌌 Prepare for the descent...</div>`;
+
+            console.log("%cSCROLLBOUND loaded — Scroll ~1.25 million pixels to finish", "color:#00ffcc");
+        }
+    </script>
+</body>
+</html>
